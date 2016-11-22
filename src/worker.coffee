@@ -25,7 +25,7 @@ class Worker
   report: ({ success, error }, callback) =>
     currentDate = moment()
     currentDate = moment.unix(@currentTime) if @currentTime
-    expires = currentDate.add(@env.LOG_EXPIRATION, 'seconds').valueOf()
+    expires = currentDate.add(@env.LOG_EXPIRATION, 'seconds').utc().format()
     options = {
       url: @env.LOG_URL,
       json: { success, expires }

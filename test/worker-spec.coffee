@@ -45,7 +45,7 @@ describe 'QueueLengthWorker', ->
 
     beforeEach (done) ->
       auth = new Buffer('some-user:some-pass').toString('base64')
-      expectedExpires = moment.unix(@currentTime).add(@env.LOG_EXPIRATION, 'seconds').valueOf()
+      expectedExpires = moment.unix(@currentTime).add(@env.LOG_EXPIRATION, 'seconds').utc().format()
       @verifyFailure = @verifierService
         .post '/verifications/test'
         .set 'Authorization', "Basic #{auth}"
@@ -75,7 +75,7 @@ describe 'QueueLengthWorker', ->
 
     beforeEach (done) ->
       auth = new Buffer('some-user:some-pass').toString('base64')
-      expectedExpires = moment.unix(@currentTime).add(@env.LOG_EXPIRATION, 'seconds').valueOf()
+      expectedExpires = moment.unix(@currentTime).add(@env.LOG_EXPIRATION, 'seconds').utc().format()
       @verifyFailure = @verifierService
         .post '/verifications/test'
         .set 'Authorization', "Basic #{auth}"
@@ -105,7 +105,7 @@ describe 'QueueLengthWorker', ->
 
     beforeEach (done) ->
       auth = new Buffer('some-user:some-pass').toString('base64')
-      expectedExpires = moment.unix(@currentTime).add(@env.LOG_EXPIRATION, 'seconds').valueOf()
+      expectedExpires = moment.unix(@currentTime).add(@env.LOG_EXPIRATION, 'seconds').utc().format()
       @verifyFailure = @verifierService
         .post '/verifications/test'
         .set 'Authorization', "Basic #{auth}"
@@ -127,7 +127,7 @@ describe 'QueueLengthWorker', ->
   describe 'when the queue length is zero', ->
     beforeEach (done) ->
       auth = new Buffer('some-user:some-pass').toString('base64')
-      expectedExpires = moment.unix(@currentTime).add(@env.LOG_EXPIRATION, 'seconds').valueOf()
+      expectedExpires = moment.unix(@currentTime).add(@env.LOG_EXPIRATION, 'seconds').utc().format()
       @verifyFailure = @verifierService
         .post '/verifications/test'
         .set 'Authorization', "Basic #{auth}"
