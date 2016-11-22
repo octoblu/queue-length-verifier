@@ -1,53 +1,59 @@
-async = require 'async'
+_       = require 'lodash'
+async   = require 'async'
+moment  = require 'moment'
+request = require 'request'
 
 class Worker
   constructor: (options={})->
-    { @client, @queueName, @queueTimeout } = options
+    { @client, @env, @currentTime, @consoleError, @consoleLog } = options
     throw new Error('Worker: requires client') unless @client?
-    throw new Error('Worker: requires queueName') unless @queueName?
-    throw new Error('Worker: requires queueTimeout') unless @queueTimeout?
-    @shouldStop = false
-    @isStopped = false
-
-  doWithNextTick: (callback) =>
-    # give some time for garbage collection
-    process.nextTick =>
-      @do (error) =>
-        process.nextTick =>
-          callback error
+    throw new Error('Worker: requires env') unless @env?
+    @consoleLog ?= console.log
+    @consoleError ?= console.error
 
   do: (callback) =>
-    @client.brpop @queueName, @queueTimeout, (error, result) =>
+    @client.llen @env.QUEUE_NAME, (error, count) =>
       return callback error if error?
-      return callback() unless result?
-
-      [ queue, data ] = result
-      try
-        data = JSON.parse data
-      catch error
-        return callback error
-
-      callback null, data
+      count = _.parseInt count
+      if count < @env.QUEUE_MAX_LENGTH
+        @report { success: true }, callback
+        return
+      error = new Error "Queue length exceeded max #{count} >= #{@env.QUEUE_MAX_LENGTH}"
+      @report { success: false, error }, callback
     return # avoid returning promise
 
-  run: (callback) =>
-    async.doUntil @doWithNextTick, (=> @shouldStop), =>
-      @isStopped = true
-      callback null
-
-  stop: (callback) =>
-    @shouldStop = true
-
-    timeout = setTimeout =>
-      clearInterval interval
-      callback new Error 'Stop Timeout Expired'
-    , 5000
-
-    interval = setInterval =>
-      return unless @isStopped?
-      clearInterval interval
-      clearTimeout timeout
+  report: ({ success, error }, callback) =>
+    currentDate = moment()
+    currentDate = moment.unix(@currentTime) if @currentTime
+    expires = currentDate.add(@env.LOG_EXPIRATION, 'seconds').valueOf()
+    options = {
+      url: @env.LOG_URL,
+      json: { success, expires }
+    }
+    _.set options, 'json.error.message', error?.message if error?.message?
+    request.post options, (httpError, response) =>
+      error ?= httpError
+      @print error
       callback()
-    , 250
+
+  print: (error) =>
+    return @consoleLog 'queue-length ok' unless error?
+    @consoleError 'queue-length failure', error.toString()
+
+  doAndDelay: (callback) =>
+    @do (error) =>
+      return callback error if error?
+      _.delay callback, @env.CHECK_DELAY
+
+  run: (callback) =>
+    async.doUntil @doAndDelay, @shouldStop, (error) =>
+      return @stopCallback error if @stopCallback?
+      callback error
+
+  shouldStop: =>
+    return @_shouldStop
+
+  stop: (@stopCallback) =>
+    @_shouldStop = true
 
 module.exports = Worker
