@@ -4,6 +4,8 @@ node_js:
 branches:
   only:
     - '/^v[0-9]/'
+services:
+  - redis
 before_install:
   - npm install --global yarn
 install:
