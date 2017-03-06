@@ -1,4 +1,4 @@
-FROM node:6
+FROM node:7
 MAINTAINER Octoblu <docker@octoblu.com>
 
 ENV NPM_CONFIG_LOGLEVEL error
@@ -6,11 +6,9 @@ ENV NPM_CONFIG_LOGLEVEL error
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-RUN npm install --silent --global yarn
-
 COPY package.json yarn.lock /usr/src/app/
 
-RUN yarn install
+RUN yarn install --production
 
 COPY . /usr/src/app
 
