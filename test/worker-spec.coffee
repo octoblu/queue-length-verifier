@@ -1,6 +1,6 @@
 async         = require 'async'
 UUID          = require 'uuid'
-shmock        = require 'shmock'
+shmock        = require '@octoblu/shmock'
 moment        = require 'moment'
 Redis         = require 'ioredis'
 RedisNS       = require '@octoblu/redis-ns'
